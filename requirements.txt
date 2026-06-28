@@ -1,0 +1,8 @@
+fastmcp
+langchain
+langchain-groq
+langgraph
+yagmail
+streamlit
+pydantic
+python-dotenv
