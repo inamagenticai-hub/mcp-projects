@@ -29,17 +29,37 @@ st.markdown("""
 # ─── Tools ──────────────────────────────────────────────────────────────────
 @tool
 def add(a: float, b: float) -> float:
-    """Add two numbers and return the sum. Input must be numbers only."""
+    """
+    ALWAYS use this tool when user asks to add, sum, or calculate numbers.
+    Args:
+        a: first number
+        b: second number
+    Returns the sum of a and b.
+    """
     return int(a) + int(b)
+
 
 @tool
 def greet(name: str) -> str:
-    """Return a greeting message for the given name."""
-    return f"Hello, {name}!"
+    """
+    ALWAYS use this tool when user wants to greet someone or says 'greet my friend X'.
+    Args:
+        name: full name of the person to greet
+    Returns a greeting message for that person.
+    """
+    return f"Hello, {name}! Hope you are doing well! 😊"
+
 
 @tool
 def send_email(to: str, subject: str, body: str) -> str:
-    """Send a real email via Gmail. Args: to, subject, body."""
+    """
+    ALWAYS use this tool when user wants to send an email.
+    Args:
+        to: recipient email address
+        subject: email subject
+        body: email body text
+    Returns confirmation of email sent.
+    """
     sender = os.getenv("SENDER_EMAIL")
     password = os.getenv("SENDER_PASSWORD")
     if not sender or not password:
@@ -50,6 +70,7 @@ def send_email(to: str, subject: str, body: str) -> str:
         return f"✅ Email sent to {to} | Subject: '{subject}'"
     except Exception as e:
         return f"❌ Failed: {str(e)}"
+
 
 tools = [send_email, add, greet]
 
@@ -66,7 +87,15 @@ def build_agent():
     return create_react_agent(
         model=llm,
         tools=tools,
-        prompt="You are a helpful assistant. Use tools when needed. Be concise."
+        prompt=(
+            "You are a helpful assistant. You have access to tools.\n"
+            "IMPORTANT RULES:\n"
+            "1. ALWAYS use the 'greet' tool when user wants to greet someone.\n"
+            "2. ALWAYS use the 'add' tool when user wants to add numbers.\n"
+            "3. ALWAYS use the 'send_email' tool when user wants to send email.\n"
+            "4. NEVER answer from memory when a tool is available.\n"
+            "5. Show the exact output returned by the tool in your response."
+        )
     )
 
 
@@ -95,7 +124,7 @@ with st.sidebar:
     st.caption("Powered by LangGraph · Groq · yagmail")
 
 
-# ─── Session state ───────────────────────────────────────────────────────────
+# ─── Session State ───────────────────────────────────────────────────────────
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
@@ -107,15 +136,22 @@ st.markdown("---")
 
 for msg in st.session_state.chat_history:
     if msg["role"] == "user":
-        st.markdown(f'<div class="user-msg">👤 <b>You</b><br>{msg["content"]}</div>', unsafe_allow_html=True)
+        st.markdown(
+            f'<div class="user-msg">👤 <b>You</b><br>{msg["content"]}</div>',
+            unsafe_allow_html=True
+        )
     else:
-        st.markdown(f'<div class="assistant-msg">🤖 <b>Agent</b><br>{msg["content"]}</div>', unsafe_allow_html=True)
+        st.markdown(
+            f'<div class="assistant-msg">🤖 <b>Agent</b><br>{msg["content"]}</div>',
+            unsafe_allow_html=True
+        )
 
 prefill = st.session_state.pop("prefill", "")
 col1, col2 = st.columns([5, 1])
 with col1:
     user_input = st.text_input(
-        "Message", value=prefill,
+        "Message",
+        value=prefill,
         placeholder="Type your message...",
         label_visibility="collapsed"
     )
