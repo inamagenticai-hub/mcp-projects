@@ -28,78 +28,80 @@ st.markdown("""
 
 
 # ─── Math Tools ─────────────────────────────────────────────────────────────
+# ─── Math Tools ─────────────────────────────────────────────────────────────
 @tool
-def add(a: float, b: float) -> str:
+def add(a: str, b: str) -> str:
     """ALWAYS use this tool when user wants to add two numbers. Args: a, b"""
-    return f"{a} + {b} = {a + b}"
+    return f"{float(a)} + {float(b)} = {float(a) + float(b)}"
 
 @tool
-def subtract(a: float, b: float) -> str:
+def subtract(a: str, b: str) -> str:
     """ALWAYS use this tool when user wants to subtract two numbers. Args: a, b"""
-    return f"{a} - {b} = {a - b}"
+    return f"{float(a)} - {float(b)} = {float(a) - float(b)}"
 
 @tool
-def multiply(a: float, b: float) -> str:
+def multiply(a: str, b: str) -> str:
     """ALWAYS use this tool when user wants to multiply two numbers. Args: a, b"""
-    return f"{a} × {b} = {a * b}"
+    return f"{float(a)} × {float(b)} = {float(a) * float(b)}"
 
 @tool
-def divide(a: float, b: float) -> str:
+def divide(a: str, b: str) -> str:
     """ALWAYS use this tool when user wants to divide two numbers. Args: a (dividend), b (divisor)"""
-    if b == 0:
+    if float(b) == 0:
         return "❌ Cannot divide by zero."
-    return f"{a} ÷ {b} = {a / b}"
+    return f"{float(a)} ÷ {float(b)} = {float(a) / float(b)}"
 
 @tool
-def percentage(value: float, total: float) -> str:
-    """ALWAYS use this tool when user wants to calculate percentage. Args: value, total"""
-    if total == 0:
+def percentage(value: str, total: str) -> str:
+    """ALWAYS use this tool when user wants to calculate what percentage value is of total. Args: value, total"""
+    if float(total) == 0:
         return "❌ Total cannot be zero."
-    result = (value / total) * 100
+    result = (float(value) / float(total)) * 100
     return f"{value} is {result:.2f}% of {total}"
 
 @tool
-def percentage_of(percent: float, total: float) -> str:
+def percentage_of(percent: str, total: str) -> str:
     """ALWAYS use this tool when user asks what X percent of Y is. Args: percent, total"""
-    result = (percent / 100) * total
+    result = (float(percent) / 100) * float(total)
     return f"{percent}% of {total} = {result}"
 
 @tool
-def power(base: float, exponent: float) -> str:
+def power(base: str, exponent: str) -> str:
     """ALWAYS use this tool when user wants to calculate power or exponent. Args: base, exponent"""
-    return f"{base}^{exponent} = {base ** exponent}"
+    return f"{base}^{exponent} = {float(base) ** float(exponent)}"
 
 @tool
-def square_root(number: float) -> str:
+def square_root(number: str) -> str:
     """ALWAYS use this tool when user wants square root of a number. Args: number"""
-    if number < 0:
+    if float(number) < 0:
         return "❌ Cannot calculate square root of a negative number."
-    return f"√{number} = {math.sqrt(number)}"
+    return f"√{number} = {math.sqrt(float(number))}"
 
 @tool
-def factorial(number: int) -> str:
+def factorial(number: str) -> str:
     """ALWAYS use this tool when user wants factorial of a number. Args: number"""
-    if number < 0:
+    n = int(float(number))
+    if n < 0:
         return "❌ Factorial of negative number is not defined."
-    if number > 20:
+    if n > 20:
         return "❌ Number too large, please use a number <= 20."
-    return f"{number}! = {math.factorial(number)}"
+    return f"{n}! = {math.factorial(n)}"
 
 @tool
-def modulus(a: float, b: float) -> str:
+def modulus(a: str, b: str) -> str:
     """ALWAYS use this tool when user wants remainder after division. Args: a, b"""
-    if b == 0:
+    if float(b) == 0:
         return "❌ Cannot divide by zero."
-    return f"{a} mod {b} = {a % b}"
+    return f"{a} mod {b} = {float(a) % float(b)}"
 
 @tool
-def absolute_value(number: float) -> str:
+def absolute_value(number: str) -> str:
     """ALWAYS use this tool when user wants absolute value of a number. Args: number"""
-    return f"|{number}| = {abs(number)}"
+    return f"|{number}| = {abs(float(number))}"
 
 @tool
 def average(numbers: str) -> str:
-    """ALWAYS use this tool when user wants average/mean of numbers. Args: numbers as comma separated string e.g. '10,20,30'"""
+    """ALWAYS use this tool when user wants average of numbers. Args: numbers as comma separated string e.g. '10,20,30'"""
     try:
         nums = [float(x.strip()) for x in numbers.split(",")]
         avg = sum(nums) / len(nums)
@@ -108,43 +110,13 @@ def average(numbers: str) -> str:
         return "❌ Please provide numbers separated by commas. e.g. '10, 20, 30'"
 
 @tool
-def log(number: float, base: float = 10.0) -> str:
+def log(number: str, base: str = "10") -> str:
     """ALWAYS use this tool when user wants logarithm of a number. Args: number, base (default 10)"""
-    if number <= 0:
+    if float(number) <= 0:
         return "❌ Logarithm is only defined for positive numbers."
-    if base == 10:
-        return f"log({number}) = {math.log10(number):.4f}"
-    return f"log base {base} of {number} = {math.log(number, base):.4f}"
-
-
-# ─── Other Tools ─────────────────────────────────────────────────────────────
-@tool
-def greet(name: str) -> str:
-    """ALWAYS use this tool when user wants to greet someone. Args: name"""
-    return f"Hello, {name}! Hope you are doing well! 😊"
-
-@tool
-def send_email(to: str, subject: str, body: str) -> str:
-    """ALWAYS use this tool when user wants to send an email. Args: to, subject, body"""
-    sender = os.getenv("SENDER_EMAIL")
-    password = os.getenv("SENDER_PASSWORD")
-    if not sender or not password:
-        return "❌ Email credentials missing in Streamlit secrets."
-    try:
-        yag = yagmail.SMTP(user=sender, password=password)
-        yag.send(to=to, subject=subject, contents=body)
-        return f"✅ Email sent to {to} | Subject: '{subject}'"
-    except Exception as e:
-        return f"❌ Failed: {str(e)}"
-
-
-tools = [
-    add, subtract, multiply, divide,
-    percentage, percentage_of, power,
-    square_root, factorial, modulus,
-    absolute_value, average, log,
-    greet, send_email
-]
+    if float(base) == 10:
+        return f"log({number}) = {math.log10(float(number)):.4f}"
+    return f"log base {base} of {number} = {math.log(float(number), float(base)):.4f}"
 
 
 # ─── Agent ──────────────────────────────────────────────────────────────────
