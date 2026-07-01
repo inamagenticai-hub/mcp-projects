@@ -3,7 +3,7 @@ import yagmail
 import os
 import math
 from langchain_groq import ChatGroq
-from langchain.tools import tool
+from langchain.tools import StructuredTool
 from langgraph.prebuilt import create_react_agent
 from dotenv import load_dotenv
 
@@ -27,153 +27,102 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# ─── Math Tools ─────────────────────────────────────────────────────────────
-@tool
-def add(input: str) -> str:
-    """ALWAYS use this tool to add two numbers. Input format: 'a,b' e.g. '70,10'"""
-    try:
-        parts = input.replace(" ", "").split(",")
-        a, b = float(parts[0]), float(parts[1])
-        return f"{a} + {b} = {a + b}"
-    except:
-        return "❌ Please provide input as 'a,b' e.g. '70,10'"
+# ─── Tool Functions ──────────────────────────────────────────────────────────
+def _add(a: float, b: float) -> str:
+    return f"{a} + {b} = {a + b}"
 
-@tool
-def subtract(input: str) -> str:
-    """ALWAYS use this tool to subtract two numbers. Input format: 'a,b' e.g. '50,10'"""
-    try:
-        parts = input.replace(" ", "").split(",")
-        a, b = float(parts[0]), float(parts[1])
-        return f"{a} - {b} = {a - b}"
-    except:
-        return "❌ Please provide input as 'a,b' e.g. '50,10'"
+def _subtract(a: float, b: float) -> str:
+    return f"{a} - {b} = {a - b}"
 
-@tool
-def multiply(input: str) -> str:
-    """ALWAYS use this tool to multiply two numbers. Input format: 'a,b' e.g. '6,7'"""
-    try:
-        parts = input.replace(" ", "").split(",")
-        a, b = float(parts[0]), float(parts[1])
-        return f"{a} × {b} = {a * b}"
-    except:
-        return "❌ Please provide input as 'a,b' e.g. '6,7'"
+def _multiply(a: float, b: float) -> str:
+    return f"{a} × {b} = {a * b}"
 
-@tool
-def divide(input: str) -> str:
-    """ALWAYS use this tool to divide two numbers. Input format: 'a,b' e.g. '100,4'"""
-    try:
-        parts = input.replace(" ", "").split(",")
-        a, b = float(parts[0]), float(parts[1])
-        if b == 0:
-            return "❌ Cannot divide by zero."
-        return f"{a} ÷ {b} = {a / b}"
-    except:
-        return "❌ Please provide input as 'a,b' e.g. '100,4'"
+def _divide(a: float, b: float) -> str:
+    if b == 0:
+        return "❌ Cannot divide by zero."
+    return f"{a} ÷ {b} = {a / b}"
 
-@tool
-def percentage(input: str) -> str:
-    """ALWAYS use this tool to find what percentage value is of total. Input format: 'value,total' e.g. '25,200'"""
-    try:
-        parts = input.replace(" ", "").split(",")
-        value, total = float(parts[0]), float(parts[1])
-        if total == 0:
-            return "❌ Total cannot be zero."
-        result = (value / total) * 100
-        return f"{value} is {result:.2f}% of {total}"
-    except:
-        return "❌ Please provide input as 'value,total' e.g. '25,200'"
+def _percentage(value: float, total: float) -> str:
+    if total == 0:
+        return "❌ Total cannot be zero."
+    return f"{value} is {(value/total)*100:.2f}% of {total}"
 
-@tool
-def percentage_of(input: str) -> str:
-    """ALWAYS use this tool when user asks what X percent of Y is. Input format: 'percent,total' e.g. '15,2000'"""
-    try:
-        parts = input.replace(" ", "").split(",")
-        percent, total = float(parts[0]), float(parts[1])
-        result = (percent / 100) * total
-        return f"{percent}% of {total} = {result}"
-    except:
-        return "❌ Please provide input as 'percent,total' e.g. '15,2000'"
+def _percentage_of(percent: float, total: float) -> str:
+    return f"{percent}% of {total} = {(percent/100)*total}"
 
-@tool
-def power(input: str) -> str:
-    """ALWAYS use this tool to calculate power or exponent. Input format: 'base,exponent' e.g. '2,10'"""
-    try:
-        parts = input.replace(" ", "").split(",")
-        base, exp = float(parts[0]), float(parts[1])
-        return f"{base}^{exp} = {base ** exp}"
-    except:
-        return "❌ Please provide input as 'base,exponent' e.g. '2,10'"
+def _power(base: float, exponent: float) -> str:
+    return f"{base}^{exponent} = {base ** exponent}"
 
-@tool
-def square_root(input: str) -> str:
-    """ALWAYS use this tool to calculate square root of a number. Input format: 'number' e.g. '144'"""
-    try:
-        number = float(input.strip())
-        if number < 0:
-            return "❌ Cannot calculate square root of a negative number."
-        return f"√{number} = {math.sqrt(number)}"
-    except:
-        return "❌ Please provide a valid number e.g. '144'"
+def _square_root(number: float) -> str:
+    if number < 0:
+        return "❌ Cannot calculate square root of negative number."
+    return f"√{number} = {math.sqrt(number)}"
 
-@tool
-def factorial(input: str) -> str:
-    """ALWAYS use this tool to calculate factorial of a number. Input format: 'number' e.g. '5'"""
-    try:
-        n = int(float(input.strip()))
-        if n < 0:
-            return "❌ Factorial of negative number is not defined."
-        if n > 20:
-            return "❌ Number too large, please use a number <= 20."
-        return f"{n}! = {math.factorial(n)}"
-    except:
-        return "❌ Please provide a valid number e.g. '5'"
+def _factorial(number: int) -> str:
+    if number < 0:
+        return "❌ Factorial of negative number is not defined."
+    if number > 20:
+        return "❌ Number too large, use number <= 20."
+    return f"{number}! = {math.factorial(number)}"
 
-@tool
-def modulus(input: str) -> str:
-    """ALWAYS use this tool to find remainder after division. Input format: 'a,b' e.g. '17,5'"""
-    try:
-        parts = input.replace(" ", "").split(",")
-        a, b = float(parts[0]), float(parts[1])
-        if b == 0:
-            return "❌ Cannot divide by zero."
-        return f"{a} mod {b} = {a % b}"
-    except:
-        return "❌ Please provide input as 'a,b' e.g. '17,5'"
+def _modulus(a: float, b: float) -> str:
+    if b == 0:
+        return "❌ Cannot divide by zero."
+    return f"{a} mod {b} = {a % b}"
 
-@tool
-def absolute_value(input: str) -> str:
-    """ALWAYS use this tool to find absolute value of a number. Input format: 'number' e.g. '-45'"""
-    try:
-        number = float(input.strip())
-        return f"|{number}| = {abs(number)}"
-    except:
-        return "❌ Please provide a valid number e.g. '-45'"
+def _absolute_value(number: float) -> str:
+    return f"|{number}| = {abs(number)}"
 
-@tool
-def average(input: str) -> str:
-    """ALWAYS use this tool to find average of numbers. Input format: 'a,b,c,...' e.g. '10,20,30,40'"""
+def _average(numbers: str) -> str:
     try:
-        nums = [float(x.strip()) for x in input.split(",")]
-        avg = sum(nums) / len(nums)
-        return f"Average = {avg:.2f}"
+        nums = [float(x.strip()) for x in numbers.split(",")]
+        return f"Average = {sum(nums)/len(nums):.2f}"
     except:
-        return "❌ Please provide numbers separated by commas e.g. '10,20,30'"
+        return "❌ Provide numbers separated by commas e.g. '10,20,30'"
 
-@tool
-def log(input: str) -> str:
-    """ALWAYS use this tool to find logarithm. Input format: 'number' or 'number,base' e.g. '1000' or '8,2'"""
-    try:
-        parts = input.replace(" ", "").split(",")
-        number = float(parts[0])
-        if number <= 0:
-            return "❌ Logarithm is only defined for positive numbers."
-        if len(parts) == 2:
-            base = float(parts[1])
-            return f"log base {base} of {number} = {math.log(number, base):.4f}"
+def _log(number: float, base: float = 10.0) -> str:
+    if number <= 0:
+        return "❌ Logarithm only defined for positive numbers."
+    if base == 10:
         return f"log({number}) = {math.log10(number):.4f}"
-    except:
-        return "❌ Please provide input as 'number' or 'number,base'"
-    
+    return f"log base {base} of {number} = {math.log(number, base):.4f}"
+
+def _greet(name: str) -> str:
+    return f"Hello, {name}! Hope you are doing well! 😊"
+
+def _send_email(to: str, subject: str, body: str) -> str:
+    sender = os.getenv("SENDER_EMAIL")
+    password = os.getenv("SENDER_PASSWORD")
+    if not sender or not password:
+        return "❌ Email credentials missing in Streamlit secrets."
+    try:
+        yag = yagmail.SMTP(user=sender, password=password)
+        yag.send(to=to, subject=subject, contents=body)
+        return f"✅ Email sent to {to} | Subject: '{subject}'"
+    except Exception as e:
+        return f"❌ Failed: {str(e)}"
+
+
+# ─── StructuredTools ─────────────────────────────────────────────────────────
+tools = [
+    StructuredTool.from_function(_add,        name="add",            description="Add two numbers. Args: a (number), b (number)"),
+    StructuredTool.from_function(_subtract,   name="subtract",       description="Subtract two numbers. Args: a (number), b (number)"),
+    StructuredTool.from_function(_multiply,   name="multiply",       description="Multiply two numbers. Args: a (number), b (number)"),
+    StructuredTool.from_function(_divide,     name="divide",         description="Divide two numbers. Args: a (number), b (number)"),
+    StructuredTool.from_function(_percentage, name="percentage",     description="Find what percentage value is of total. Args: value (number), total (number)"),
+    StructuredTool.from_function(_percentage_of, name="percentage_of", description="Find X percent of Y. Args: percent (number), total (number)"),
+    StructuredTool.from_function(_power,      name="power",          description="Calculate base raised to exponent. Args: base (number), exponent (number)"),
+    StructuredTool.from_function(_square_root,name="square_root",    description="Calculate square root of a number. Args: number (number)"),
+    StructuredTool.from_function(_factorial,  name="factorial",      description="Calculate factorial of a number. Args: number (int)"),
+    StructuredTool.from_function(_modulus,    name="modulus",        description="Find remainder after division. Args: a (number), b (number)"),
+    StructuredTool.from_function(_absolute_value, name="absolute_value", description="Find absolute value of a number. Args: number (number)"),
+    StructuredTool.from_function(_average,    name="average",        description="Find average of numbers. Args: numbers (comma separated string e.g. '10,20,30')"),
+    StructuredTool.from_function(_log,        name="log",            description="Find logarithm of a number. Args: number (number), base (number, default 10)"),
+    StructuredTool.from_function(_greet,      name="greet",          description="Greet a person by name. Args: name (string)"),
+    StructuredTool.from_function(_send_email, name="send_email",     description="Send an email via Gmail. Args: to (email), subject (string), body (string)"),
+]
+
+
 # ─── Agent ──────────────────────────────────────────────────────────────────
 @st.cache_resource
 def build_agent():
@@ -187,14 +136,12 @@ def build_agent():
         model=llm,
         tools=tools,
         prompt=(
-            "You are a helpful assistant with access to math and utility tools.\n"
-            "IMPORTANT RULES:\n"
-            "1. ALWAYS use the correct tool for every math operation.\n"
-            "2. ALWAYS use 'greet' tool when user wants to greet someone.\n"
-            "3. ALWAYS use 'send_email' tool when user wants to send an email.\n"
-            "4. NEVER calculate math yourself — always use the tool.\n"
-            "5. Show the exact output returned by the tool in your response.\n"
-            "6. For average, pass numbers as comma separated string e.g. '10,20,30'."
+            "You are a helpful assistant with math and utility tools.\n"
+            "RULES:\n"
+            "1. ALWAYS use the correct tool for every operation.\n"
+            "2. NEVER calculate math yourself — always use the tool.\n"
+            "3. Show the exact output returned by the tool.\n"
+            "4. For average, pass numbers as comma separated string e.g. '10,20,30'."
         )
     )
 
@@ -204,7 +151,6 @@ with st.sidebar:
     st.markdown("## 🤖 MCP Agent")
     st.markdown("---")
     st.markdown("### 🛠 Available Tools")
-
     st.markdown("**📧 send_email** — Send emails via Gmail")
     st.markdown("**👋 greet** — Generate a greeting for someone")
     st.markdown("---")
@@ -221,11 +167,11 @@ with st.sidebar:
     st.markdown("**🔢 absolute_value** — Absolute value")
     st.markdown("**📈 average** — Average of numbers")
     st.markdown("**📉 log** — Logarithm of a number")
-
     st.markdown("---")
     st.markdown("### 💡 Example Prompts")
     examples = [
-        "What is 125 + 378?",
+        "What is 70 + 20?",
+        "What is 50 - 10?",
         "Multiply 45 by 13",
         "What is square root of 144?",
         "Calculate average of 10, 20, 30, 40, 50",
@@ -236,19 +182,15 @@ with st.sidebar:
         if st.button(ex, key=ex):
             st.session_state["prefill"] = ex
             st.rerun()
-
     if st.button("🗑 Clear Chat"):
         st.session_state.chat_history = []
         st.rerun()
-
     st.caption("Powered by LangGraph · Groq · yagmail")
 
 
 # ─── Session State ───────────────────────────────────────────────────────────
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
-if "input_counter" not in st.session_state:
-    st.session_state.input_counter = 0
 
 
 # ─── Main ────────────────────────────────────────────────────────────────────
@@ -258,15 +200,9 @@ st.markdown("---")
 
 for msg in st.session_state.chat_history:
     if msg["role"] == "user":
-        st.markdown(
-            f'<div class="user-msg">👤 <b>You</b><br>{msg["content"]}</div>',
-            unsafe_allow_html=True
-        )
+        st.markdown(f'<div class="user-msg">👤 <b>You</b><br>{msg["content"]}</div>', unsafe_allow_html=True)
     else:
-        st.markdown(
-            f'<div class="assistant-msg">🤖 <b>Agent</b><br>{msg["content"]}</div>',
-            unsafe_allow_html=True
-        )
+        st.markdown(f'<div class="assistant-msg">🤖 <b>Agent</b><br>{msg["content"]}</div>', unsafe_allow_html=True)
 
 prefill = st.session_state.pop("prefill", "")
 
