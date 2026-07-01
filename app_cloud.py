@@ -104,9 +104,9 @@ with st.sidebar:
     st.markdown("## 🤖 MCP Agent")
     st.markdown("---")
     st.markdown("### 🛠 Available Tools")
-    st.markdown("**📧 send_email** — Gmail se email bhejo")
-    st.markdown("**➕ add** — Do numbers jodo")
-    st.markdown("**👋 greet** — Kisi ko greet karo")
+    st.markdown("**📧 send_email** — Send emails via Gmail")
+    st.markdown("**➕ add** — Add two numbers together")
+    st.markdown("**👋 greet** — Generate a greeting for someone")
     st.markdown("---")
     st.markdown("### 💡 Example Prompts")
     examples = [
