@@ -1,18 +1,32 @@
-# app_cloud.py - Streamlit Cloud version (MCP server ki zaroorat nahi)
 import streamlit as st
 import yagmail
 import os
 from langchain_groq import ChatGroq
 from langchain.tools import tool
-from langchain.agents import create_react_agent, AgentExecutor
-from langchain import hub
+from langgraph.prebuilt import create_react_agent
 from dotenv import load_dotenv
 
 load_dotenv()
 
 st.set_page_config(page_title="MCP Agent", page_icon="🤖", layout="wide")
 
-# --- Tools directly define karo ---
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+    .stApp { background: #0d0f18; }
+    [data-testid="stSidebar"] { background: #0f1117; border-right: 1px solid #1e2130; }
+    [data-testid="stSidebar"] * { color: #e2e8f0 !important; }
+    .user-msg { background:#1a1d2e; border-left:3px solid #6366f1; border-radius:8px; padding:14px 18px; margin:10px 0; color:#e2e8f0; }
+    .assistant-msg { background:#111827; border-left:3px solid #10b981; border-radius:8px; padding:14px 18px; margin:10px 0; color:#d1fae5; }
+    .stButton > button { background:#6366f1; color:white; border:none; border-radius:8px; font-weight:600; }
+    .stButton > button:hover { background:#4f46e5; }
+    h1,h2,h3 { color:#f1f5f9 !important; }
+</style>
+""", unsafe_allow_html=True)
+
+
+# ─── Tools ──────────────────────────────────────────────────────────────────
 @tool
 def add(a: int, b: int) -> int:
     """Add two integers and return the sum."""
@@ -39,6 +53,8 @@ def send_email(to: str, subject: str, body: str) -> str:
 
 tools = [send_email, add, greet]
 
+
+# ─── Agent ──────────────────────────────────────────────────────────────────
 @st.cache_resource
 def build_agent():
     llm = ChatGroq(
@@ -47,27 +63,14 @@ def build_agent():
         max_tokens=1024,
         api_key=os.getenv("GROQ_API_KEY"),
     )
-    prompt = hub.pull("hwchase17/react")
-    agent = create_react_agent(llm, tools, prompt)
-    return AgentExecutor(agent=agent, tools=tools, verbose=True, handle_parsing_errors=True)
+    return create_react_agent(
+        model=llm,
+        tools=tools,
+        prompt="You are a helpful assistant. Use tools when needed. Be concise."
+    )
 
-# --- CSS ---
-st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-    .stApp { background: #0d0f18; }
-    [data-testid="stSidebar"] { background: #0f1117; border-right: 1px solid #1e2130; }
-    [data-testid="stSidebar"] * { color: #e2e8f0 !important; }
-    .user-msg { background:#1a1d2e; border-left:3px solid #6366f1; border-radius:8px; padding:14px 18px; margin:10px 0; color:#e2e8f0; }
-    .assistant-msg { background:#111827; border-left:3px solid #10b981; border-radius:8px; padding:14px 18px; margin:10px 0; color:#d1fae5; }
-    .stButton > button { background:#6366f1; color:white; border:none; border-radius:8px; font-weight:600; }
-    .stButton > button:hover { background:#4f46e5; }
-    h1,h2,h3 { color:#f1f5f9 !important; }
-</style>
-""", unsafe_allow_html=True)
 
-# --- Sidebar ---
+# ─── Sidebar ────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## 🤖 MCP Agent")
     st.markdown("---")
@@ -78,9 +81,9 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### 💡 Example Prompts")
     examples = [
-        "Send an email to ali@gmail.com with subject 'Hi' and body 'Hello!'",
+        "Greet my friend Ali",
         "What is 450 + 320?",
-        "Greet my friend Sara",
+        "Send an email to test@gmail.com with subject 'Hi' and body 'Hello!'",
     ]
     for ex in examples:
         if st.button(ex, key=ex):
@@ -89,14 +92,17 @@ with st.sidebar:
     if st.button("🗑 Clear Chat"):
         st.session_state.chat_history = []
         st.rerun()
-    st.caption("Powered by LangChain · Groq · yagmail")
+    st.caption("Powered by LangGraph · Groq · yagmail")
 
-# --- Session state ---
+
+# ─── Session state ───────────────────────────────────────────────────────────
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# --- Main ---
+
+# ─── Main ────────────────────────────────────────────────────────────────────
 st.markdown("# 🤖 MCP Agent Chat")
+st.markdown("Chat with an AI agent that can **send emails**, **do math**, and **greet people**.")
 st.markdown("---")
 
 for msg in st.session_state.chat_history:
@@ -108,7 +114,11 @@ for msg in st.session_state.chat_history:
 prefill = st.session_state.pop("prefill", "")
 col1, col2 = st.columns([5, 1])
 with col1:
-    user_input = st.text_input("Message", value=prefill, placeholder="Type your message...", label_visibility="collapsed")
+    user_input = st.text_input(
+        "Message", value=prefill,
+        placeholder="Type your message...",
+        label_visibility="collapsed"
+    )
 with col2:
     send_clicked = st.button("Send →", use_container_width=True)
 
@@ -116,10 +126,16 @@ if send_clicked and user_input.strip():
     st.session_state.chat_history.append({"role": "user", "content": user_input.strip()})
     with st.spinner("Agent is thinking…"):
         try:
-            executor = build_agent()
-            result = executor.invoke({"input": user_input.strip()})
-            reply = result.get("output", "No response.")
+            agent = build_agent()
+            response = agent.invoke({
+                "messages": [{"role": "user", "content": user_input.strip()}]
+            })
+            messages = response.get("messages", [])
+            reply = messages[-1].content if messages else "No response."
             st.session_state.chat_history.append({"role": "assistant", "content": reply})
         except Exception as e:
-            st.session_state.chat_history.append({"role": "assistant", "content": f"❌ Error: {str(e)}"})
+            st.session_state.chat_history.append({
+                "role": "assistant",
+                "content": f"❌ Error: {str(e)}"
+            })
     st.rerun()
