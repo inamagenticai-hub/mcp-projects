@@ -28,9 +28,9 @@ st.markdown("""
 
 # ─── Tools ──────────────────────────────────────────────────────────────────
 @tool
-def add(a: int, b: int) -> int:
-    """Add two integers and return the sum."""
-    return a + b
+def add(a: float, b: float) -> float:
+    """Add two numbers and return the sum. Input must be numbers only."""
+    return int(a) + int(b)
 
 @tool
 def greet(name: str) -> str:
