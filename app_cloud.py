@@ -147,24 +147,32 @@ for msg in st.session_state.chat_history:
         )
 
 prefill = st.session_state.pop("prefill", "")
+
+# Input clear karne ke liye counter use karo
+if "input_counter" not in st.session_state:
+    st.session_state.input_counter = 0
+
 col1, col2 = st.columns([5, 1])
 with col1:
     user_input = st.text_input(
         "Message",
         value=prefill,
         placeholder="Type your message...",
-        label_visibility="collapsed"
+        label_visibility="collapsed",
+        key=f"user_input_{st.session_state.input_counter}"
     )
 with col2:
     send_clicked = st.button("Send →", use_container_width=True)
 
 if send_clicked and user_input.strip():
-    st.session_state.chat_history.append({"role": "user", "content": user_input.strip()})
+    msg = user_input.strip()
+    st.session_state.input_counter += 1  # Counter badlega to input khali ho jayega
+    st.session_state.chat_history.append({"role": "user", "content": msg})
     with st.spinner("Agent is thinking…"):
         try:
             agent = build_agent()
             response = agent.invoke({
-                "messages": [{"role": "user", "content": user_input.strip()}]
+                "messages": [{"role": "user", "content": msg}]
             })
             messages = response.get("messages", [])
             reply = messages[-1].content if messages else "No response."
