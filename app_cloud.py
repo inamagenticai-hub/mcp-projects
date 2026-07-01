@@ -28,97 +28,152 @@ st.markdown("""
 
 
 # ─── Math Tools ─────────────────────────────────────────────────────────────
-# ─── Math Tools ─────────────────────────────────────────────────────────────
 @tool
-def add(a: str, b: str) -> str:
-    """ALWAYS use this tool when user wants to add two numbers. Args: a, b"""
-    return f"{float(a)} + {float(b)} = {float(a) + float(b)}"
-
-@tool
-def subtract(a: str, b: str) -> str:
-    """ALWAYS use this tool when user wants to subtract two numbers. Args: a, b"""
-    return f"{float(a)} - {float(b)} = {float(a) - float(b)}"
-
-@tool
-def multiply(a: str, b: str) -> str:
-    """ALWAYS use this tool when user wants to multiply two numbers. Args: a, b"""
-    return f"{float(a)} × {float(b)} = {float(a) * float(b)}"
-
-@tool
-def divide(a: str, b: str) -> str:
-    """ALWAYS use this tool when user wants to divide two numbers. Args: a (dividend), b (divisor)"""
-    if float(b) == 0:
-        return "❌ Cannot divide by zero."
-    return f"{float(a)} ÷ {float(b)} = {float(a) / float(b)}"
-
-@tool
-def percentage(value: str, total: str) -> str:
-    """ALWAYS use this tool when user wants to calculate what percentage value is of total. Args: value, total"""
-    if float(total) == 0:
-        return "❌ Total cannot be zero."
-    result = (float(value) / float(total)) * 100
-    return f"{value} is {result:.2f}% of {total}"
-
-@tool
-def percentage_of(percent: str, total: str) -> str:
-    """ALWAYS use this tool when user asks what X percent of Y is. Args: percent, total"""
-    result = (float(percent) / 100) * float(total)
-    return f"{percent}% of {total} = {result}"
-
-@tool
-def power(base: str, exponent: str) -> str:
-    """ALWAYS use this tool when user wants to calculate power or exponent. Args: base, exponent"""
-    return f"{base}^{exponent} = {float(base) ** float(exponent)}"
-
-@tool
-def square_root(number: str) -> str:
-    """ALWAYS use this tool when user wants square root of a number. Args: number"""
-    if float(number) < 0:
-        return "❌ Cannot calculate square root of a negative number."
-    return f"√{number} = {math.sqrt(float(number))}"
-
-@tool
-def factorial(number: str) -> str:
-    """ALWAYS use this tool when user wants factorial of a number. Args: number"""
-    n = int(float(number))
-    if n < 0:
-        return "❌ Factorial of negative number is not defined."
-    if n > 20:
-        return "❌ Number too large, please use a number <= 20."
-    return f"{n}! = {math.factorial(n)}"
-
-@tool
-def modulus(a: str, b: str) -> str:
-    """ALWAYS use this tool when user wants remainder after division. Args: a, b"""
-    if float(b) == 0:
-        return "❌ Cannot divide by zero."
-    return f"{a} mod {b} = {float(a) % float(b)}"
-
-@tool
-def absolute_value(number: str) -> str:
-    """ALWAYS use this tool when user wants absolute value of a number. Args: number"""
-    return f"|{number}| = {abs(float(number))}"
-
-@tool
-def average(numbers: str) -> str:
-    """ALWAYS use this tool when user wants average of numbers. Args: numbers as comma separated string e.g. '10,20,30'"""
+def add(input: str) -> str:
+    """ALWAYS use this tool to add two numbers. Input format: 'a,b' e.g. '70,10'"""
     try:
-        nums = [float(x.strip()) for x in numbers.split(",")]
-        avg = sum(nums) / len(nums)
-        return f"Average of {nums} = {avg:.2f}"
-    except Exception:
-        return "❌ Please provide numbers separated by commas. e.g. '10, 20, 30'"
+        parts = input.replace(" ", "").split(",")
+        a, b = float(parts[0]), float(parts[1])
+        return f"{a} + {b} = {a + b}"
+    except:
+        return "❌ Please provide input as 'a,b' e.g. '70,10'"
 
 @tool
-def log(number: str, base: str = "10") -> str:
-    """ALWAYS use this tool when user wants logarithm of a number. Args: number, base (default 10)"""
-    if float(number) <= 0:
-        return "❌ Logarithm is only defined for positive numbers."
-    if float(base) == 10:
-        return f"log({number}) = {math.log10(float(number)):.4f}"
-    return f"log base {base} of {number} = {math.log(float(number), float(base)):.4f}"
+def subtract(input: str) -> str:
+    """ALWAYS use this tool to subtract two numbers. Input format: 'a,b' e.g. '50,10'"""
+    try:
+        parts = input.replace(" ", "").split(",")
+        a, b = float(parts[0]), float(parts[1])
+        return f"{a} - {b} = {a - b}"
+    except:
+        return "❌ Please provide input as 'a,b' e.g. '50,10'"
 
+@tool
+def multiply(input: str) -> str:
+    """ALWAYS use this tool to multiply two numbers. Input format: 'a,b' e.g. '6,7'"""
+    try:
+        parts = input.replace(" ", "").split(",")
+        a, b = float(parts[0]), float(parts[1])
+        return f"{a} × {b} = {a * b}"
+    except:
+        return "❌ Please provide input as 'a,b' e.g. '6,7'"
 
+@tool
+def divide(input: str) -> str:
+    """ALWAYS use this tool to divide two numbers. Input format: 'a,b' e.g. '100,4'"""
+    try:
+        parts = input.replace(" ", "").split(",")
+        a, b = float(parts[0]), float(parts[1])
+        if b == 0:
+            return "❌ Cannot divide by zero."
+        return f"{a} ÷ {b} = {a / b}"
+    except:
+        return "❌ Please provide input as 'a,b' e.g. '100,4'"
+
+@tool
+def percentage(input: str) -> str:
+    """ALWAYS use this tool to find what percentage value is of total. Input format: 'value,total' e.g. '25,200'"""
+    try:
+        parts = input.replace(" ", "").split(",")
+        value, total = float(parts[0]), float(parts[1])
+        if total == 0:
+            return "❌ Total cannot be zero."
+        result = (value / total) * 100
+        return f"{value} is {result:.2f}% of {total}"
+    except:
+        return "❌ Please provide input as 'value,total' e.g. '25,200'"
+
+@tool
+def percentage_of(input: str) -> str:
+    """ALWAYS use this tool when user asks what X percent of Y is. Input format: 'percent,total' e.g. '15,2000'"""
+    try:
+        parts = input.replace(" ", "").split(",")
+        percent, total = float(parts[0]), float(parts[1])
+        result = (percent / 100) * total
+        return f"{percent}% of {total} = {result}"
+    except:
+        return "❌ Please provide input as 'percent,total' e.g. '15,2000'"
+
+@tool
+def power(input: str) -> str:
+    """ALWAYS use this tool to calculate power or exponent. Input format: 'base,exponent' e.g. '2,10'"""
+    try:
+        parts = input.replace(" ", "").split(",")
+        base, exp = float(parts[0]), float(parts[1])
+        return f"{base}^{exp} = {base ** exp}"
+    except:
+        return "❌ Please provide input as 'base,exponent' e.g. '2,10'"
+
+@tool
+def square_root(input: str) -> str:
+    """ALWAYS use this tool to calculate square root of a number. Input format: 'number' e.g. '144'"""
+    try:
+        number = float(input.strip())
+        if number < 0:
+            return "❌ Cannot calculate square root of a negative number."
+        return f"√{number} = {math.sqrt(number)}"
+    except:
+        return "❌ Please provide a valid number e.g. '144'"
+
+@tool
+def factorial(input: str) -> str:
+    """ALWAYS use this tool to calculate factorial of a number. Input format: 'number' e.g. '5'"""
+    try:
+        n = int(float(input.strip()))
+        if n < 0:
+            return "❌ Factorial of negative number is not defined."
+        if n > 20:
+            return "❌ Number too large, please use a number <= 20."
+        return f"{n}! = {math.factorial(n)}"
+    except:
+        return "❌ Please provide a valid number e.g. '5'"
+
+@tool
+def modulus(input: str) -> str:
+    """ALWAYS use this tool to find remainder after division. Input format: 'a,b' e.g. '17,5'"""
+    try:
+        parts = input.replace(" ", "").split(",")
+        a, b = float(parts[0]), float(parts[1])
+        if b == 0:
+            return "❌ Cannot divide by zero."
+        return f"{a} mod {b} = {a % b}"
+    except:
+        return "❌ Please provide input as 'a,b' e.g. '17,5'"
+
+@tool
+def absolute_value(input: str) -> str:
+    """ALWAYS use this tool to find absolute value of a number. Input format: 'number' e.g. '-45'"""
+    try:
+        number = float(input.strip())
+        return f"|{number}| = {abs(number)}"
+    except:
+        return "❌ Please provide a valid number e.g. '-45'"
+
+@tool
+def average(input: str) -> str:
+    """ALWAYS use this tool to find average of numbers. Input format: 'a,b,c,...' e.g. '10,20,30,40'"""
+    try:
+        nums = [float(x.strip()) for x in input.split(",")]
+        avg = sum(nums) / len(nums)
+        return f"Average = {avg:.2f}"
+    except:
+        return "❌ Please provide numbers separated by commas e.g. '10,20,30'"
+
+@tool
+def log(input: str) -> str:
+    """ALWAYS use this tool to find logarithm. Input format: 'number' or 'number,base' e.g. '1000' or '8,2'"""
+    try:
+        parts = input.replace(" ", "").split(",")
+        number = float(parts[0])
+        if number <= 0:
+            return "❌ Logarithm is only defined for positive numbers."
+        if len(parts) == 2:
+            base = float(parts[1])
+            return f"log base {base} of {number} = {math.log(number, base):.4f}"
+        return f"log({number}) = {math.log10(number):.4f}"
+    except:
+        return "❌ Please provide input as 'number' or 'number,base'"
+    
 # ─── Agent ──────────────────────────────────────────────────────────────────
 @st.cache_resource
 def build_agent():
